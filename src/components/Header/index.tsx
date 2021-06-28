@@ -1,13 +1,16 @@
+import styles from "./styles.module.scss";
+
 export function Header() {
   return (
-    <header>
-      <div>
+    <header className={styles.headerContainer}>
+      <div className={styles.headerContent}>
         <img src="/images/logo.svg" alt="Logo" />
         <nav>
-          <a>Home</a>
+          <a className={styles.active}>Home</a>
           <a>Posts</a>
         </nav>
       </div>
     </header>
   );
 }
+
