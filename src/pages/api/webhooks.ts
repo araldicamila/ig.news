@@ -21,7 +21,11 @@ export const config = {
   },
 };
 
-const relevantEvents = new Set(["checkout.session.completed"]);
+const relevantEvents = new Set([
+  "checkout.session.completed",
+  "customer.subscription.deleted",
+  "customer.subscription.updated",
+]);
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "POST") {
@@ -45,10 +49,26 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     if (relevantEvents.has(type)) {
       try {
         switch (type) {
-          case 'checkout.session.completed':
-            const checkoutSession = event.data.object as Stripe.Checkout.Session;
+          case "customer.subscription.deleted":
+          case "customer.subscription.updated":
+            const subscription = event.data.object as Stripe.Subscription;
+          
+            saveSubscription(
+              subscription.id,
+              subscription.customer.toString(),
+              false
+            )
 
-            await saveSubscription(checkoutSession.subscription.toString(), checkoutSession.customer.toString())
+          break;
+          case "checkout.session.completed":
+            const checkoutSession = event.data
+              .object as Stripe.Checkout.Session;
+
+            await saveSubscription(
+              checkoutSession.subscription.toString(),
+              checkoutSession.customer.toString(),
+              true
+            );
 
             break;
           default:
@@ -59,9 +79,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       }
     }
 
-
     return res.json({ received: true });
-
   } else {
     res.setHeader("Allow", "POST");
     res.status(405).end("Method not allowed");
